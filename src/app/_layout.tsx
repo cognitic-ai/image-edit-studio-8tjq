@@ -43,8 +43,15 @@ function WebTabsLayout() {
       <WebTabs.Screen
         name="index"
         options={{
-          title: "Home",
-          tabBarIcon: (props) => <MaterialIcons {...props} name="home" />,
+          title: "Gallery",
+          tabBarIcon: (props) => <MaterialIcons {...props} name="photo-library" />,
+        }}
+      />
+      <WebTabs.Screen
+        name="editor"
+        options={{
+          title: "Editor",
+          tabBarIcon: (props) => <MaterialIcons {...props} name="edit" />,
         }}
       />
       <WebTabs.Screen
@@ -62,12 +69,23 @@ function NativeTabsLayout() {
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Gallery</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           {...Platform.select({
-            ios: { sf: { default: "house", selected: "house.fill" } },
+            ios: { sf: { default: "photo.on.rectangle", selected: "photo.fill.on.rectangle.fill" } },
             default: {
-              src: <NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="home" />,
+              src: <NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="photo-library" />,
+            },
+          })}
+        />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="editor">
+        <NativeTabs.Trigger.Label>Editor</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon
+          {...Platform.select({
+            ios: { sf: { default: "slider.horizontal.3", selected: "slider.horizontal.3" } },
+            default: {
+              src: <NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="edit" />,
             },
           })}
         />

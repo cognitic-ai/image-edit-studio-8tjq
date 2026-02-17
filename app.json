@@ -1,6 +1,6 @@
 {
   "expo": {
-    "icon": "https://agent.expo.app/static/icon.png",
+    "icon": "https://storage.googleapis.com/expo-agent-images-production/staging/036bcf3d-e1b6-44f0-aacb-f76155eff66a/019c6c19-9e6e-7959-ad20-c4c96cd150d6/033caf84-50e4-404e-b1a1-c46b51d355ab",
     "orientation": "default",
     "scheme": "acme",
     "userInterfaceStyle": "automatic",
@@ -15,7 +15,8 @@
       "expo-font",
       "expo-image",
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      "@bacons/apple-colors"
     ],
     "name": "Image Edit Studio",
     "owner": "mokos"
