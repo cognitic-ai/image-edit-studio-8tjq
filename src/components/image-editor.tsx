@@ -1,16 +1,21 @@
-import React, { useState, useRef } from 'react';
-import { View, Text, Pressable, ScrollView, Alert, Dimensions } from 'react-native';
-import { Image } from 'expo-image';
-import * as ImageManipulator from 'expo-image-manipulator';
-import * as MediaLibrary from 'expo-media-library';
-import * as AC from '@bacons/apple-colors';
-import ImagePickerComponent from './image-picker';
-import EditingControls from './editing-controls';
-
-const { width: screenWidth } = Dimensions.get('window');
-const IMAGE_WIDTH = screenWidth - 32;
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  Alert,
+  useWindowDimensions,
+} from "react-native";
+import { Image } from "expo-image";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as MediaLibrary from "expo-media-library";
+import * as AC from "@bacons/apple-colors";
+import ImagePickerComponent from "./image-picker";
+import EditingControls from "./editing-controls";
 
 export default function ImageEditor() {
+  const { width } = useWindowDimensions();
   const [originalImage, setOriginalImage] = useState<string | null>(null);
   const [editedImage, setEditedImage] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -24,174 +29,155 @@ export default function ImageEditor() {
   const handleImageSelected = (uri: string) => {
     setOriginalImage(uri);
     setEditedImage(uri);
-    // Reset edit settings when new image is selected
-    setEditSettings({
-      brightness: 0,
-      contrast: 0,
-      saturation: 0,
-      rotation: 0,
-    });
+    setEditSettings({ brightness: 0, contrast: 0, saturation: 0, rotation: 0 });
   };
 
   const applyEdits = async () => {
     if (!originalImage) return;
-
     setIsProcessing(true);
-
     try {
-      let actions = [];
-
-      // Add rotation if needed
+      const actions: ImageManipulator.Action[] = [];
       if (editSettings.rotation !== 0) {
         actions.push({ rotate: editSettings.rotation });
       }
-
-      // Create manipulation actions for brightness, contrast, saturation
-      const hasColorAdjustments =
-        editSettings.brightness !== 0 ||
-        editSettings.contrast !== 0 ||
-        editSettings.saturation !== 0;
-
-      if (hasColorAdjustments) {
-        // Note: expo-image-manipulator has limited color adjustment options
-        // For now, we'll use what's available
-        if (editSettings.brightness > 0) {
-          actions.push({
-            resize: { width: IMAGE_WIDTH }, // Maintain current functionality
-          });
-        }
-      }
-
       if (actions.length > 0) {
         const result = await ImageManipulator.manipulateAsync(
           originalImage,
           actions,
-          { compress: 0.9, format: ImageManipulator.SaveFormat.JPEG }
+          { compress: 0.92, format: ImageManipulator.SaveFormat.JPEG }
         );
         setEditedImage(result.uri);
       }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to apply edits');
+    } catch {
+      Alert.alert("Error", "Failed to apply edits");
     } finally {
       setIsProcessing(false);
     }
   };
 
   const resetEdits = () => {
-    setEditSettings({
-      brightness: 0,
-      contrast: 0,
-      saturation: 0,
-      rotation: 0,
-    });
+    setEditSettings({ brightness: 0, contrast: 0, saturation: 0, rotation: 0 });
     setEditedImage(originalImage);
   };
 
   const saveImage = async () => {
-    if (!editedImage) {
-      Alert.alert('No Image', 'Please select and edit an image first');
-      return;
-    }
-
+    if (!editedImage) return;
     try {
-      // Request permission to save to media library
       const { status } = await MediaLibrary.requestPermissionsAsync();
-
-      if (status !== 'granted') {
-        Alert.alert('Permission Required', 'You need to enable permission to save photos');
+      if (status !== "granted") {
+        Alert.alert("Permission Required", "Allow access to save photos.");
         return;
       }
-
-      // Save the edited image
       const asset = await MediaLibrary.createAssetAsync(editedImage);
-      await MediaLibrary.createAlbumAsync('Edited Photos', asset, false);
-
-      Alert.alert('Success', 'Image saved to your photo library!');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save image');
+      await MediaLibrary.createAlbumAsync("Edited Photos", asset, false);
+      Alert.alert("Saved", "Image saved to your library.");
+    } catch {
+      Alert.alert("Error", "Failed to save image");
     }
   };
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: AC.systemBackground as any }}
       contentInsetAdjustmentBehavior="automatic"
+      style={{ flex: 1, backgroundColor: AC.systemGroupedBackground as any }}
+      contentContainerStyle={{ paddingBottom: 40 }}
     >
-      <View style={{ padding: 16 }}>
-        <Text style={{
-          fontSize: 28,
-          fontWeight: 'bold',
-          color: AC.label as any,
-          marginBottom: 20,
-          textAlign: 'center',
-        }}>
-          Image Editor
-        </Text>
-
-        <ImagePickerComponent
-          onImageSelected={handleImageSelected}
-          selectedImage={editedImage}
-        />
-
-        {originalImage && (
-          <>
-            <EditingControls
-              settings={editSettings}
-              onSettingsChange={setEditSettings}
-              onApplyEdits={applyEdits}
-              onResetEdits={resetEdits}
-              isProcessing={isProcessing}
+      {/* Image preview */}
+      <View style={{ paddingHorizontal: 16, paddingTop: 16 }}>
+        {editedImage ? (
+          <View
+            style={{
+              borderRadius: 16,
+              borderCurve: "continuous" as any,
+              overflow: "hidden",
+              backgroundColor: AC.secondarySystemGroupedBackground as any,
+              boxShadow: "0 2px 12px rgba(0,0,0,0.12)",
+            }}
+          >
+            <Image
+              source={{ uri: editedImage }}
+              style={{ width: "100%", height: width - 32 }}
+              contentFit="cover"
             />
-
-            <View style={{
-              flexDirection: 'row',
-              gap: 12,
-              marginTop: 20,
-              justifyContent: 'center',
-            }}>
-              <Pressable
-                style={{
-                  flex: 1,
-                  backgroundColor: AC.systemGreen as any,
-                  paddingVertical: 14,
-                  borderRadius: 12,
-                  borderCurve: 'continuous' as any,
-                  alignItems: 'center',
-                }}
-                onPress={saveImage}
-              >
-                <Text style={{
-                  color: 'white',
-                  fontWeight: '600',
-                  fontSize: 16,
-                }}>
-                  Save to Photos
-                </Text>
-              </Pressable>
-
-              <Pressable
-                style={{
-                  backgroundColor: AC.systemGray4 as any,
-                  paddingHorizontal: 20,
-                  paddingVertical: 14,
-                  borderRadius: 12,
-                  borderCurve: 'continuous' as any,
-                  alignItems: 'center',
-                }}
-                onPress={resetEdits}
-              >
-                <Text style={{
-                  color: AC.label as any,
-                  fontWeight: '600',
-                  fontSize: 16,
-                }}>
-                  Reset
-                </Text>
-              </Pressable>
-            </View>
-          </>
+          </View>
+        ) : (
+          <ImagePickerComponent onImageSelected={handleImageSelected} />
         )}
       </View>
+
+      {/* Change / pick photo row */}
+      {editedImage && (
+        <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+          <ImagePickerComponent
+            onImageSelected={handleImageSelected}
+            compact
+          />
+        </View>
+      )}
+
+      {/* Editing controls */}
+      {originalImage && (
+        <EditingControls
+          settings={editSettings}
+          onSettingsChange={setEditSettings}
+          onApplyEdits={applyEdits}
+          isProcessing={isProcessing}
+        />
+      )}
+
+      {/* Action buttons */}
+      {originalImage && (
+        <View style={{ paddingHorizontal: 16, gap: 10, marginTop: 8 }}>
+          <Pressable
+            style={({ pressed }) => ({
+              backgroundColor: AC.systemBlue as any,
+              paddingVertical: 15,
+              borderRadius: 14,
+              borderCurve: "continuous" as any,
+              alignItems: "center",
+              opacity: pressed ? 0.8 : 1,
+            })}
+            onPress={applyEdits}
+            disabled={isProcessing}
+          >
+            <Text style={{ color: "white", fontWeight: "600", fontSize: 17 }}>
+              {isProcessing ? "Applying…" : "Apply Edits"}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => ({
+              backgroundColor: AC.systemGreen as any,
+              paddingVertical: 15,
+              borderRadius: 14,
+              borderCurve: "continuous" as any,
+              alignItems: "center",
+              opacity: pressed ? 0.8 : 1,
+            })}
+            onPress={saveImage}
+          >
+            <Text style={{ color: "white", fontWeight: "600", fontSize: 17 }}>
+              Save to Photos
+            </Text>
+          </Pressable>
+
+          <Pressable
+            style={({ pressed }) => ({
+              backgroundColor: AC.secondarySystemGroupedBackground as any,
+              paddingVertical: 15,
+              borderRadius: 14,
+              borderCurve: "continuous" as any,
+              alignItems: "center",
+              opacity: pressed ? 0.7 : 1,
+            })}
+            onPress={resetEdits}
+          >
+            <Text style={{ color: AC.systemRed as any, fontWeight: "600", fontSize: 17 }}>
+              Reset
+            </Text>
+          </Pressable>
+        </View>
+      )}
     </ScrollView>
   );
 }

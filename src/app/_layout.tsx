@@ -15,9 +15,8 @@ export default function Layout() {
 function TabsLayout() {
   if (process.env.EXPO_OS === "web") {
     return <WebTabsLayout />;
-  } else {
-    return <NativeTabsLayout />;
   }
+  return <NativeTabsLayout />;
 }
 
 function WebTabsLayout() {
@@ -35,9 +34,7 @@ function WebTabsLayout() {
               tabBarVariant: "material",
               tabBarLabelPosition: isLg ? undefined : "below-icon",
             }
-          : {
-              tabBarPosition: "bottom",
-            }),
+          : { tabBarPosition: "bottom" }),
       }}
     >
       <WebTabs.Screen
@@ -51,7 +48,7 @@ function WebTabsLayout() {
         name="editor"
         options={{
           title: "Editor",
-          tabBarIcon: (props) => <MaterialIcons {...props} name="edit" />,
+          tabBarIcon: (props) => <MaterialIcons {...props} name="tune" />,
         }}
       />
       <WebTabs.Screen
@@ -73,9 +70,7 @@ function NativeTabsLayout() {
         <NativeTabs.Trigger.Icon
           {...Platform.select({
             ios: { sf: { default: "photo.on.rectangle", selected: "photo.fill.on.rectangle.fill" } },
-            default: {
-              src: <NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="photo-library" />,
-            },
+            default: { src: <NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="photo-library" /> },
           })}
         />
       </NativeTabs.Trigger>
@@ -84,9 +79,7 @@ function NativeTabsLayout() {
         <NativeTabs.Trigger.Icon
           {...Platform.select({
             ios: { sf: { default: "slider.horizontal.3", selected: "slider.horizontal.3" } },
-            default: {
-              src: <NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="edit" />,
-            },
+            default: { src: <NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="tune" /> },
           })}
         />
       </NativeTabs.Trigger>
@@ -94,10 +87,8 @@ function NativeTabsLayout() {
         <NativeTabs.Trigger.Label>Info</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon
           {...Platform.select({
-            ios: { sf: "cursorarrow.rays" },
-            default: {
-              src: <NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="info" />,
-            },
+            ios: { sf: { default: "info.circle", selected: "info.circle.fill" } },
+            default: { src: <NativeTabs.Trigger.VectorIcon family={MaterialIcons} name="info" /> },
           })}
         />
       </NativeTabs.Trigger>

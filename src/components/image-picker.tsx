@@ -1,161 +1,130 @@
-import React, { useState } from 'react';
-import { Alert, Pressable, Text, View, StyleSheet } from 'react-native';
-import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
-import * as AC from '@bacons/apple-colors';
+import React from "react";
+import { Alert, Pressable, Text, View } from "react-native";
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
+import * as AC from "@bacons/apple-colors";
 
 interface ImagePickerComponentProps {
   onImageSelected?: (uri: string) => void;
-  selectedImage?: string;
+  compact?: boolean;
 }
 
 export default function ImagePickerComponent({
   onImageSelected,
-  selectedImage
+  compact = false,
 }: ImagePickerComponentProps) {
-  const [image, setImage] = useState<string | null>(selectedImage || null);
-
   const pickImage = async () => {
-    // Request permission
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-    if (permissionResult.granted === false) {
-      Alert.alert("Permission Required", "You need to enable permission to access photos.");
+    const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!granted) {
+      Alert.alert("Permission Required", "Enable photo library access to select images.");
       return;
     }
-
-    // Launch image picker
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: false,
-      aspect: [4, 3],
       quality: 1,
     });
-
-    if (!result.canceled && result.assets[0]) {
-      const imageUri = result.assets[0].uri;
-      setImage(imageUri);
-      onImageSelected?.(imageUri);
-    }
+    if (!result.canceled) onImageSelected?.(result.assets[0].uri);
   };
 
   const takePhoto = async () => {
-    // Request camera permission
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-
-    if (permissionResult.granted === false) {
-      Alert.alert("Permission Required", "You need to enable camera access to take photos.");
+    const { granted } = await ImagePicker.requestCameraPermissionsAsync();
+    if (!granted) {
+      Alert.alert("Permission Required", "Enable camera access to take photos.");
       return;
     }
-
-    // Launch camera
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: false,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      const imageUri = result.assets[0].uri;
-      setImage(imageUri);
-      onImageSelected?.(imageUri);
-    }
+    const result = await ImagePicker.launchCameraAsync({ quality: 1 });
+    if (!result.canceled) onImageSelected?.(result.assets[0].uri);
   };
 
-  const showImageOptions = () => {
-    Alert.alert(
-      "Select Image",
-      "Choose how you'd like to select an image",
-      [
-        {
-          text: "Camera",
-          onPress: takePhoto,
-        },
-        {
-          text: "Photo Library",
-          onPress: pickImage,
-        },
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-      ]
-    );
+  const showOptions = () => {
+    Alert.alert("Choose Photo", undefined, [
+      { text: "Take Photo", onPress: takePhoto },
+      { text: "Choose from Library", onPress: pickImage },
+      { text: "Cancel", style: "cancel" },
+    ]);
   };
 
-  return (
-    <View style={styles.container}>
-      {image ? (
-        <View style={styles.imageContainer}>
-          <Image
-            source={{ uri: image }}
-            style={styles.image}
-            contentFit="cover"
-          />
-          <Pressable
-            style={styles.changeButton}
-            onPress={showImageOptions}
-          >
-            <Text style={styles.changeButtonText}>Change Photo</Text>
-          </Pressable>
-        </View>
-      ) : (
+  if (compact) {
+    return (
+      <View
+        style={{
+          backgroundColor: AC.secondarySystemGroupedBackground as any,
+          borderRadius: 12,
+          borderCurve: "continuous" as any,
+          overflow: "hidden",
+        }}
+      >
         <Pressable
-          style={styles.placeholderContainer}
-          onPress={showImageOptions}
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 13,
+            paddingHorizontal: 16,
+            gap: 12,
+            opacity: pressed ? 0.6 : 1,
+          })}
+          onPress={takePhoto}
         >
-          <Text style={styles.placeholderText}>📷</Text>
-          <Text style={styles.placeholderSubtext}>Tap to select a photo</Text>
+          <Image
+            source="sf:camera"
+            style={{ width: 22, height: 22, tintColor: AC.systemBlue as any } as any}
+          />
+          <Text style={{ flex: 1, color: AC.label as any, fontSize: 16 }}>Take Photo</Text>
+          <Image
+            source="sf:chevron.right"
+            style={{ width: 12, height: 16, tintColor: AC.systemGray3 as any } as any}
+          />
         </Pressable>
-      )}
-    </View>
+        <View style={{ height: 0.5, backgroundColor: AC.separator as any, marginLeft: 50 }} />
+        <Pressable
+          style={({ pressed }) => ({
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 13,
+            paddingHorizontal: 16,
+            gap: 12,
+            opacity: pressed ? 0.6 : 1,
+          })}
+          onPress={pickImage}
+        >
+          <Image
+            source="sf:photo.on.rectangle"
+            style={{ width: 22, height: 22, tintColor: AC.systemBlue as any } as any}
+          />
+          <Text style={{ flex: 1, color: AC.label as any, fontSize: 16 }}>Choose from Library</Text>
+          <Image
+            source="sf:chevron.right"
+            style={{ width: 12, height: 16, tintColor: AC.systemGray3 as any } as any}
+          />
+        </Pressable>
+      </View>
+    );
+  }
+
+  // Empty state — full placeholder
+  return (
+    <Pressable
+      style={({ pressed }) => ({
+        backgroundColor: AC.secondarySystemGroupedBackground as any,
+        borderRadius: 16,
+        borderCurve: "continuous" as any,
+        paddingVertical: 52,
+        alignItems: "center",
+        gap: 12,
+        opacity: pressed ? 0.7 : 1,
+      })}
+      onPress={showOptions}
+    >
+      <Image
+        source="sf:photo.badge.plus"
+        style={{ width: 52, height: 52, tintColor: AC.systemBlue as any } as any}
+      />
+      <Text style={{ color: AC.label as any, fontSize: 17, fontWeight: "600" }}>
+        Select a Photo
+      </Text>
+      <Text style={{ color: AC.secondaryLabel as any, fontSize: 14 }}>
+        Tap to choose from your library or camera
+      </Text>
+    </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  imageContainer: {
-    alignItems: 'center',
-  },
-  image: {
-    width: 300,
-    height: 300,
-    borderRadius: 12,
-    borderCurve: 'continuous' as any,
-  },
-  changeButton: {
-    marginTop: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    backgroundColor: AC.systemBlue as any,
-    borderRadius: 8,
-    borderCurve: 'continuous' as any,
-  },
-  changeButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  placeholderContainer: {
-    width: 300,
-    height: 300,
-    borderRadius: 12,
-    borderCurve: 'continuous' as any,
-    borderWidth: 2,
-    borderColor: AC.systemGray3 as any,
-    borderStyle: 'dashed',
-    backgroundColor: AC.systemGray6 as any,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholderText: {
-    fontSize: 48,
-    marginBottom: 8,
-  },
-  placeholderSubtext: {
-    color: AC.secondaryLabel as any,
-    fontSize: 16,
-  },
-});

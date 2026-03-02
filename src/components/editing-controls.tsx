@@ -1,180 +1,163 @@
-import React from 'react';
-import { View, Text, Pressable } from 'react-native';
-import * as AC from '@bacons/apple-colors';
-import Slider from './slider';
+import React from "react";
+import { View, Text, Pressable } from "react-native";
+import Slider from "@react-native-community/slider";
+import { Image } from "expo-image";
+import * as AC from "@bacons/apple-colors";
+
+interface Settings {
+  brightness: number;
+  contrast: number;
+  saturation: number;
+  rotation: number;
+}
 
 interface EditingControlsProps {
-  settings: {
-    brightness: number;
-    contrast: number;
-    saturation: number;
-    rotation: number;
-  };
-  onSettingsChange: (settings: any) => void;
+  settings: Settings;
+  onSettingsChange: (settings: Settings) => void;
   onApplyEdits: () => void;
-  onResetEdits: () => void;
   isProcessing: boolean;
+}
+
+function SectionHeader({ title }: { title: string }) {
+  return (
+    <Text
+      style={{
+        fontSize: 13,
+        color: AC.secondaryLabel as any,
+        textTransform: "uppercase",
+        letterSpacing: 0.5,
+        paddingHorizontal: 16,
+        paddingTop: 24,
+        paddingBottom: 6,
+      }}
+    >
+      {title}
+    </Text>
+  );
+}
+
+function SliderRow({
+  icon,
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  icon: string;
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 10, gap: 12 }}>
+      <Image
+        source={`sf:${icon}`}
+        style={{ width: 22, height: 22, tintColor: AC.systemBlue as any } as any}
+      />
+      <View style={{ flex: 1 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+          <Text style={{ color: AC.label as any, fontSize: 15 }}>{label}</Text>
+          <Text style={{ color: AC.secondaryLabel as any, fontSize: 13, fontVariant: ["tabular-nums"] as any }}>
+            {value > 0 ? `+${value.toFixed(1)}` : value.toFixed(1)}
+          </Text>
+        </View>
+        <Slider
+          value={value}
+          minimumValue={min}
+          maximumValue={max}
+          step={0.05}
+          onValueChange={onChange}
+          minimumTrackTintColor={AC.systemBlue as any}
+          maximumTrackTintColor={AC.systemGray4 as any}
+          thumbTintColor={process.env.EXPO_OS === "android" ? (AC.systemBlue as any) : undefined}
+          style={{ height: 28 }}
+        />
+      </View>
+    </View>
+  );
 }
 
 export default function EditingControls({
   settings,
   onSettingsChange,
-  onApplyEdits,
-  onResetEdits,
-  isProcessing,
 }: EditingControlsProps) {
+  const update = (key: keyof Settings) => (value: number) =>
+    onSettingsChange({ ...settings, [key]: value });
 
-  const updateSetting = (key: string, value: number) => {
-    onSettingsChange({
-      ...settings,
-      [key]: value,
-    });
-  };
-
-  const rotateImage = (degrees: number) => {
-    const newRotation = (settings.rotation + degrees) % 360;
-    updateSetting('rotation', newRotation);
-  };
+  const rotate = (deg: number) =>
+    onSettingsChange({ ...settings, rotation: (settings.rotation + deg + 360) % 360 });
 
   return (
-    <View style={{
-      backgroundColor: AC.secondarySystemBackground as any,
-      borderRadius: 16,
-      borderCurve: 'continuous' as any,
-      padding: 20,
-      marginVertical: 20,
-    }}>
-      <Text style={{
-        fontSize: 20,
-        fontWeight: '600',
-        color: AC.label as any,
-        marginBottom: 20,
-        textAlign: 'center',
-      }}>
-        Editing Tools
-      </Text>
-
-      {/* Brightness Control */}
-      <View style={{ marginBottom: 20 }}>
-        <Text style={{
-          fontSize: 16,
-          fontWeight: '500',
-          color: AC.label as any,
-          marginBottom: 8,
-        }}>
-          Brightness: {settings.brightness.toFixed(1)}
-        </Text>
-        <Slider
-          value={settings.brightness}
-          minimumValue={-1}
-          maximumValue={1}
-          step={0.1}
-          onValueChange={(value) => updateSetting('brightness', value)}
-        />
-      </View>
-
-      {/* Contrast Control */}
-      <View style={{ marginBottom: 20 }}>
-        <Text style={{
-          fontSize: 16,
-          fontWeight: '500',
-          color: AC.label as any,
-          marginBottom: 8,
-        }}>
-          Contrast: {settings.contrast.toFixed(1)}
-        </Text>
-        <Slider
-          value={settings.contrast}
-          minimumValue={-1}
-          maximumValue={1}
-          step={0.1}
-          onValueChange={(value) => updateSetting('contrast', value)}
-        />
-      </View>
-
-      {/* Saturation Control */}
-      <View style={{ marginBottom: 20 }}>
-        <Text style={{
-          fontSize: 16,
-          fontWeight: '500',
-          color: AC.label as any,
-          marginBottom: 8,
-        }}>
-          Saturation: {settings.saturation.toFixed(1)}
-        </Text>
-        <Slider
-          value={settings.saturation}
-          minimumValue={-1}
-          maximumValue={1}
-          step={0.1}
-          onValueChange={(value) => updateSetting('saturation', value)}
-        />
-      </View>
-
-      {/* Rotation Controls */}
-      <View style={{ marginBottom: 20 }}>
-        <Text style={{
-          fontSize: 16,
-          fontWeight: '500',
-          color: AC.label as any,
-          marginBottom: 12,
-        }}>
-          Rotation: {settings.rotation}°
-        </Text>
-        <View style={{
-          flexDirection: 'row',
-          gap: 12,
-          justifyContent: 'center',
-        }}>
-          <Pressable
-            style={{
-              backgroundColor: AC.systemBlue as any,
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 8,
-              borderCurve: 'continuous' as any,
-            }}
-            onPress={() => rotateImage(-90)}
-          >
-            <Text style={{ color: 'white', fontWeight: '600' }}>↺ 90°</Text>
-          </Pressable>
-
-          <Pressable
-            style={{
-              backgroundColor: AC.systemBlue as any,
-              paddingHorizontal: 16,
-              paddingVertical: 8,
-              borderRadius: 8,
-              borderCurve: 'continuous' as any,
-            }}
-            onPress={() => rotateImage(90)}
-          >
-            <Text style={{ color: 'white', fontWeight: '600' }}>↻ 90°</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {/* Apply Edits Button */}
-      <Pressable
+    <View style={{ marginTop: 8 }}>
+      <SectionHeader title="Adjustments" />
+      <View
         style={{
-          backgroundColor: isProcessing ? AC.systemGray3 as any : AC.systemOrange as any,
-          paddingVertical: 14,
+          backgroundColor: AC.secondarySystemGroupedBackground as any,
           borderRadius: 12,
-          borderCurve: 'continuous' as any,
-          alignItems: 'center',
-          marginTop: 10,
+          borderCurve: "continuous" as any,
+          marginHorizontal: 16,
+          overflow: "hidden",
         }}
-        onPress={onApplyEdits}
-        disabled={isProcessing}
       >
-        <Text style={{
-          color: 'white',
-          fontWeight: '600',
-          fontSize: 16,
-        }}>
-          {isProcessing ? 'Processing...' : 'Apply Edits'}
+        <SliderRow icon="sun.max" label="Brightness" value={settings.brightness} min={-1} max={1} onChange={update("brightness")} />
+        <View style={{ height: 0.5, backgroundColor: AC.separator as any, marginLeft: 50 }} />
+        <SliderRow icon="circle.lefthalf.filled" label="Contrast" value={settings.contrast} min={-1} max={1} onChange={update("contrast")} />
+        <View style={{ height: 0.5, backgroundColor: AC.separator as any, marginLeft: 50 }} />
+        <SliderRow icon="drop" label="Saturation" value={settings.saturation} min={-1} max={1} onChange={update("saturation")} />
+      </View>
+
+      <SectionHeader title="Rotate" />
+      <View
+        style={{
+          backgroundColor: AC.secondarySystemGroupedBackground as any,
+          borderRadius: 12,
+          borderCurve: "continuous" as any,
+          marginHorizontal: 16,
+          overflow: "hidden",
+          flexDirection: "row",
+        }}
+      >
+        <Pressable
+          style={({ pressed }) => ({
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            paddingVertical: 14,
+            opacity: pressed ? 0.6 : 1,
+          })}
+          onPress={() => rotate(-90)}
+        >
+          <Image source="sf:rotate.left" style={{ width: 20, height: 20, tintColor: AC.systemBlue as any } as any} />
+          <Text style={{ color: AC.systemBlue as any, fontSize: 15, fontWeight: "500" }}>Rotate Left</Text>
+        </Pressable>
+        <View style={{ width: 0.5, backgroundColor: AC.separator as any }} />
+        <Pressable
+          style={({ pressed }) => ({
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            paddingVertical: 14,
+            opacity: pressed ? 0.6 : 1,
+          })}
+          onPress={() => rotate(90)}
+        >
+          <Image source="sf:rotate.right" style={{ width: 20, height: 20, tintColor: AC.systemBlue as any } as any} />
+          <Text style={{ color: AC.systemBlue as any, fontSize: 15, fontWeight: "500" }}>Rotate Right</Text>
+        </Pressable>
+      </View>
+
+      {settings.rotation !== 0 && (
+        <Text style={{ color: AC.secondaryLabel as any, fontSize: 12, textAlign: "center", marginTop: 6 }}>
+          {settings.rotation}° rotation will be applied
         </Text>
-      </Pressable>
+      )}
     </View>
   );
 }

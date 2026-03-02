@@ -18,7 +18,7 @@
       "expo-web-browser",
       "@bacons/apple-colors"
     ],
-    "name": "Image Edit Studio 2",
+    "name": "Image Edit Studio",
     "owner": "mokos",
     "extra": {
       "router": {},
