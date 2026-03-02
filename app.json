@@ -19,6 +19,12 @@
       "@bacons/apple-colors"
     ],
     "name": "Image Edit Studio 3",
-    "owner": "mokos"
+    "owner": "mokos",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "436a62f0-9153-41e8-bb03-a59383d6309a"
+      }
+    }
   }
 }
